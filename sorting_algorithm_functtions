@@ -1,0 +1,271 @@
+"""
+
+Directions:
+    * Complete the sorting algorithm functions that are given below. Note that
+      it okay (and probably helpful) to define auxiliary/helper functions that
+      are called from the functions below.  Refer to the README.md file for
+      additional info.
+
+    * NOTE: Remember to add a docstring for each function, and that a reasonable
+      coding style is followed (e.g. blank lines between functions).
+      Your program will not pass the tests if this is not done!
+
+    * Be sure that you implement your own sorting functions since.
+      No credit will be given if Python's built-in sort function is used.
+"""
+
+import time
+import random
+import sys
+from math import ceil, log10, log2
+
+
+# Set recursion limit to be greater than the max size of any list you attempt to sort
+sys.setrecursionlimit(10000)
+
+
+def bubbleSort(a):
+    """Implementing bubble sort """
+    start_time = time.time()
+
+    for i in range(len(a), -1, -1):
+        for k in range(i - 1):
+            if a[k] > a[k + 1]:
+                a[k], a[k + 1] = a[k + 1], a[k]
+
+    elapsed_time = time.time() - start_time
+    return (a, elapsed_time)
+
+
+def mergeSort(a, split_by_3=False):
+    """ Implementing mergeSort """
+    def merge2(p, r, result):
+        """ Implementing Mergsort by 2 """
+        x = 0
+        y = 0
+
+        while True:
+            if x < len(p) and y < len(r):
+                if p[x] < r[y]:
+                    result.append(p[x])
+                    x += 1
+                else:
+                    result.append(r[y])
+                    y += 1
+            elif x < len(p):
+                result.append(p[x])
+                x += 1
+            elif y < len(r):
+                result.append(r[y])
+                y += 1
+            else:
+                break
+
+    start_time = time.time()
+
+    if len(a) < 4:
+        return bubbleSort(a)
+
+    if not split_by_3:
+        mid = int(len(a) / 2)
+        b = a[0:mid]
+        m = []
+        r = a[mid:len(a)]
+    else:
+        t1 = int(len(a) / 3)
+        t2 = t1 * 2
+        b = a[0:t1]
+        m = a[t1:t2]
+        r = a[t2:len(a)]
+
+    b = mergeSort(b)[0]
+    m = mergeSort(m)[0]
+    r = mergeSort(r)[0]
+
+    result = []
+    x = 0
+    y = 0
+    z = 0
+    while True:
+
+        if x < len(b) and y < len(r) and z < len(m):
+            if b[x] < r[y] and b[x] < m[z]:
+                result.append(b[x])
+                x += 1
+            elif r[y] < b[x] and r[y] < m[z]:
+                result.append(r[y])
+                y += 1
+            elif m[z] < b[x] and m[z] < r[y]:
+                result.append(m[z])
+                z += 1
+        elif x < len(b) and y < len(r):
+            merge2(b[x:len(b)], r[y:len(r)], result)
+            break
+        elif x < len(b) and z < len(m):
+            merge2(b[x:len(b)], m[z:len(m)], result)
+            break
+        elif z < len(m) and y < len(r):
+            merge2(m[z:len(m)], r[y:len(r)], result)
+            break
+
+    elapsed_time = time.time() - start_time
+    return (result, elapsed_time)
+
+
+def quickSort(a, pivot_to_use='first'):
+    """ Implementing quickSort """
+    start_time = time.time()
+
+    def qsort(a, q, r):
+        """ Implementing quicksort """
+        span = r - q
+        if span < 1:
+            return
+        if span < 2:
+            if a[q] > a[r]:
+                a[q], a[r] = a[r], a[q]
+            return
+
+        ip = q if (pivot_to_use == "first") else q + int(span / 2)
+        a[ip], a[q] = a[q], a[ip]
+
+        p = a[q]
+        s = q
+
+        for j in range(q + 1, r + 1):
+
+            if a[j] < p:
+                s += 1
+                a[s], a[j] = a[j], a[s]
+
+        a[s], a[q] = a[q], a[s]
+
+        qsort(a, q, s - 1)
+        qsort(a, s + 1, r)
+
+    qsort(a, 0, len(a) - 1)
+
+    elapsed_time = time.time() - start_time
+    return (a, elapsed_time)
+
+
+def radixSort(a, max_digits):
+    """ Implementing radixSort """
+    max_bits = ceil(log2(max(a)))
+
+    start_time = time.time()
+
+    i = 0
+    bucket0 = []
+    bucket1 = []
+
+    while i < max_bits:
+        bucket0.clear()
+        bucket1.clear()
+        for num in a:
+            if num & (1 << i):
+                bucket1.append(num)
+            else:
+                bucket0.append(num)
+
+        k = 0
+        for num in bucket0:
+            a[k] = num
+            k += 1
+        for num in bucket1:
+            a[k] = num
+            k += 1
+
+        i += 1
+
+    elapsed_time = time.time() - start_time
+    return (a, elapsed_time)
+
+
+def is_sorted(t):
+    """ Implementing is_sorted function to check if all the items are sorted"""
+    list = t[0]
+    for i in range(len(list) - 1):
+        if list[i] > list[i + 1]:
+            print("list is not sorted")
+            return False
+    return True
+
+
+def assign02_main():
+    """ A 'main' function to be run when our program is run standalone """
+    list1 = list(range(5000))
+    random.seed(1)
+    random.shuffle(list1)
+
+    # list1 = [54, 26, 93, 17, 77, 31, 44, 55, 20] # helpful for early testing
+
+    # run sorting functions
+    bubbleRes = bubbleSort(list(list1))
+    mergeRes2 = mergeSort(list(list1), split_by_3=False)
+    mergeRes3 = mergeSort(list(list1), split_by_3=True)
+    quickResA = quickSort(list(list1), pivot_to_use='first')
+    quickResB = quickSort(list(list1), pivot_to_use='middle')
+    radixRes = radixSort(list(list1), ceil(log10(max(list1))))
+
+    # from  matplotlib import pyplot as  plt
+    # plt.figure()
+    # plt.plot(mergeRes2)
+    # plt.show()
+
+    print(f"\nlist1 results (randomly shuffled w/ size = {len(list1)})")
+    print(list1[:10])
+    print(f"  bubbleSort time: {bubbleRes[1]:.4f} sec")
+    print(bubbleRes[0][:10])
+    is_sorted(bubbleRes)
+    print(f"  mergeSort2 time: {mergeRes2[1]:.4f} sec")
+    print(mergeRes2[0][:10])
+    is_sorted(mergeRes2)
+    print(f"  mergeSort3 time: {mergeRes3[1]:.4f} sec")
+    print(mergeRes3[0][:10])
+    is_sorted(mergeRes3)
+    print(f"  quickSortA time: {quickResA[1]:.4f} sec")
+    print(quickResA[0][:10])
+    is_sorted(quickResA)
+    print(f"  quickSortB time: {quickResB[1]:.4f} sec")
+    print(quickResB[0][:10])
+    is_sorted(quickResB)
+    print(f"  radixSort time: {radixRes[1]:.4f} sec")
+    print(radixRes[0][:10])
+    is_sorted(radixRes)
+
+    # Try with a list sorted in reverse order (worst case for quicksort)
+    list2 = list(range(6000, 1000, -1))
+
+    # run sorting functions
+    bubbleRes = bubbleSort(list(list2))
+    mergeRes2 = mergeSort(list(list2), split_by_3=False)
+    mergeRes3 = mergeSort(list(list2), split_by_3=True)
+    quickResA = quickSort(list(list2), pivot_to_use='first')
+    quickResB = quickSort(list(list2), pivot_to_use='middle')
+    radixRes = radixSort(list(list2), ceil(log10(max(list2))))
+
+    print(f"\nlist1 results (randomly shuffled w/ size = {len(list1)})")
+    print(list1[:10])
+    print(f"  bubbleSort time: {bubbleRes[1]:.4f} sec")
+    print(bubbleRes[0][:10])
+    is_sorted(bubbleRes)
+    print(f"  mergeSort2 time: {mergeRes2[1]:.4f} sec")
+    print(mergeRes2[0][:10])
+    is_sorted(mergeRes2)
+    print(f"  mergeSort3 time: {mergeRes3[1]:.4f} sec")
+    print(mergeRes3[0][:10])
+    is_sorted(mergeRes3)
+    print(f"  quickSortA time: {quickResA[1]:.4f} sec")
+    print(quickResA[0][:10])
+    is_sorted(quickResA)
+    print(f"  quickSortB time: {quickResB[1]:.4f} sec")
+    print(quickResB[0][:10])
+    is_sorted(quickResB)
+    print(f"  radixSort time: {radixRes[1]:.4f} sec")
+    print(radixRes[0][:10])
+    is_sorted(radixRes)
+
+
+if __name__ == '__main__':
+    assign02_main()
